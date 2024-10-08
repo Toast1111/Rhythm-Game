@@ -41,13 +41,14 @@ class AudioAnalyzer {
     }
 
     getAudioData() {
+        if (!this.analyser) return new Uint8Array(128).fill(0);
         const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
         this.analyser.getByteFrequencyData(dataArray);
         return dataArray;
     }
 
     setVolume(volume) {
-        if (this.source) {
+        if (this.audioContext) {
             const gainNode = this.audioContext.createGain();
             gainNode.gain.setValueAtTime(volume / 100, this.audioContext.currentTime);
             this.source.disconnect();
