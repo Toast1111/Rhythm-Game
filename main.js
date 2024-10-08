@@ -18,23 +18,14 @@ function startGame(isDynamic) {
     scoreValue.textContent = score;
     noteGenerator.clearNotes();
 
-    if (isDynamic) {
-        audioAnalyzer.start();
-    } else {
-        // Load premade song and note patterns
-        loadPremadeSong(audioSource);
-    }
+    canvas.style.display = 'block';  // Ensure canvas is visible
+    audioAnalyzer.start();
 
     // Apply current settings
     applySettings();
 
     lastFrameTime = performance.now();
     requestAnimationFrame(gameLoop);
-}
-
-function loadPremadeSong(songFile) {
-    console.log('Loading premade song:', songFile);
-    // Placeholder for loading premade song and notes
 }
 
 function applySettings() {
@@ -51,8 +42,6 @@ function gameLoop(currentTime) {
     if (isDynamicMode) {
         const audioData = audioAnalyzer.getAudioData();
         noteGenerator.generateNotes(audioData, currentTime);
-    } else {
-        // Update premade notes
     }
 
     noteGenerator.updateNotes(currentTime, canvas.height);
@@ -112,8 +101,12 @@ function drawGame() {
 
 function playSoundEffect(type) {
     console.log('Playing sound effect:', type);
+    // Here you would implement actual sound effect playback
 }
 
-document.addEventListener('DOMContentLoaded', initializeGame);
+document.addEventListener('DOMContentLoaded', () => {
+    initializeGame();
+    gameUI.setupMainMenu();  // Ensure the UI is set up after the DOM is loaded
+});
 
 window.startGame = startGame;
