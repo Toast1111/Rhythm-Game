@@ -4,6 +4,7 @@ class AudioAnalyzer {
         this.audioContext = null;
         this.analyser = null;
         this.source = null;
+        this.isPlaying = false;
     }
 
     async setupAudioContext(file) {
@@ -26,8 +27,16 @@ class AudioAnalyzer {
     }
 
     start() {
-        if (this.source) {
+        if (this.source && !this.isPlaying) {
             this.source.start(0);
+            this.isPlaying = true;
+        }
+    }
+
+    stop() {
+        if (this.source && this.isPlaying) {
+            this.source.stop();
+            this.isPlaying = false;
         }
     }
 
@@ -35,6 +44,16 @@ class AudioAnalyzer {
         const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
         this.analyser.getByteFrequencyData(dataArray);
         return dataArray;
+    }
+
+    setVolume(volume) {
+        if (this.source) {
+            const gainNode = this.audioContext.createGain();
+            gainNode.gain.setValueAtTime(volume / 100, this.audioContext.currentTime);
+            this.source.disconnect();
+            this.source.connect(gainNode);
+            gainNode.connect(this.analyser);
+        }
     }
 }
 
