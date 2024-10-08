@@ -11,7 +11,7 @@ function initializeGame() {
     scoreValue = document.getElementById('score-value');
 }
 
-function startGame(isDynamic, audioSource) {
+function startGame(isDynamic) {
     isDynamicMode = isDynamic;
     isPlaying = true;
     score = 0;
@@ -33,17 +33,13 @@ function startGame(isDynamic, audioSource) {
 }
 
 function loadPremadeSong(songFile) {
-    // Here you would load the premade song and its predefined note patterns
     console.log('Loading premade song:', songFile);
     // Placeholder for loading premade song and notes
-    // In a real implementation, you'd load an audio file and a predefined set of notes
 }
 
 function applySettings() {
-    // Apply the current settings to the game
     console.log('Applying settings:', gameUI.settings);
     audioAnalyzer.setVolume(gameUI.settings.songVolume);
-    // You'd apply other settings here (SFX volume, calibration, etc.)
 }
 
 function gameLoop(currentTime) {
@@ -57,7 +53,6 @@ function gameLoop(currentTime) {
         noteGenerator.generateNotes(audioData, currentTime);
     } else {
         // Update premade notes
-        // This would be based on the predefined patterns and timing
     }
 
     noteGenerator.updateNotes(currentTime, canvas.height);
@@ -116,14 +111,9 @@ function drawGame() {
 }
 
 function playSoundEffect(type) {
-    // Placeholder for playing sound effects
     console.log('Playing sound effect:', type);
-    // In a real implementation, you'd play actual sound effects here
-    // The volume would be controlled by gameUI.settings.sfxVolume
 }
 
-// Initialize game when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', initializeGame);
 
-// Expose the startGame function to the UI
 window.startGame = startGame;
