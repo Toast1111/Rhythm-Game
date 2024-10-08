@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Rhythm Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        #game-container {
+            text-align: center;
+        }
+        #game-canvas {
+            border: 1px solid #000;
+            background-color: #fff;
+        }
+        #file-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Dynamic Rhythm Game</h1>
+        <div id="score">Score: <span id="score-value">0</span></div>
+        <canvas id="game-canvas" width="400" height="600"></canvas>
+        <br>
+        <input type="file" id="file-input" accept="audio/*">
+        <button id="upload-button">Upload Music</button>
+        <button id="start-button" disabled>Start Game</button>
+    </div>
+
+    <script src="audioAnalysis.js"></script>
+    <script src="noteGenerator.js"></script>
+    <script src="playerInput.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
