@@ -67,7 +67,7 @@ class GameUI {
     startDynamicGame() {
         console.log('Starting dynamic game');
         this.showGameScreen(true);
-        startGame(true);
+        startGame(true);  // Call the startGame function from main.js
     }
 
     showPremadeSongs() {
