@@ -1,10 +1,10 @@
 # Dynamic Rhythm Game
 
-This is a web-based rhythm game that analyzes uploaded music to dynamically generate gameplay.
+This is a web-based rhythm game that analyzes uploaded MP3 music files to dynamically generate gameplay.
 
 ## Features
 
-- Upload and play your own music files
+- Upload and play your own MP3 music files
 - Dynamic note generation based on music analysis
 - Four-lane gameplay using keyboard input
 - Real-time scoring system
@@ -12,8 +12,8 @@ This is a web-based rhythm game that analyzes uploaded music to dynamically gene
 ## How to Play
 
 1. Open the game in a web browser
-2. Click "Upload Music" to select an audio file
-3. Once the file is loaded, click "Start Game"
+2. Click "Upload MP3" to select an MP3 audio file
+3. Once the file is loaded successfully, click "Start Game"
 4. Use the D, F, J, and K keys to hit the notes in each lane
 5. Try to hit the notes when they reach the red line for maximum score
 
@@ -45,6 +45,7 @@ Alternatively, you can host this game using GitHub Pages:
 - Visual and audio feedback for note hits
 - Combo system for scoring
 - Leaderboard integration
+- Support for additional audio formats
 
 ## Contributing
 
