@@ -1,30 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Rhythm Game</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-        }
-        #game-container {
-            text-align: center;
-        }
-        #game-canvas {
-            border: 1px solid #000;
-            background-color: #fff;
-        }
-        #file-input {
-            display: none;
-        }
-    </style>
+    <!-- ... (previous head content remains the same) ... -->
 </head>
 <body>
     <div id="game-container">
@@ -32,8 +9,8 @@
         <div id="score">Score: <span id="score-value">0</span></div>
         <canvas id="game-canvas" width="400" height="600"></canvas>
         <br>
-        <input type="file" id="file-input" accept="audio/*">
-        <button id="upload-button">Upload Music</button>
+        <input type="file" id="file-input" accept="audio/mpeg, audio/mp3">
+        <button id="upload-button">Upload MP3</button>
         <button id="start-button" disabled>Start Game</button>
     </div>
 
