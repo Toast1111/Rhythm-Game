@@ -3,46 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Rhythm Game</title>
+    <title>Rhythm Game</title>
     <style>
         body {
+            margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
+            background-color: #1a1a1a;
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            color: white;
         }
-        #game-container {
+        #gameContainer {
             text-align: center;
         }
-        #game-canvas {
-            border: 1px solid #000;
-            background-color: #fff;
+        #gameCanvas {
+            border: 2px solid #333;
+            background-color: black;
         }
-        button {
-            margin: 10px;
-            padding: 10px 20px;
+        #scoreLabel, #comboLabel {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        #debugLabel {
             font-size: 16px;
-        }
-        .animated-list {
-            list-style-type: none;
-            padding: 0;
-        }
-        .animated-list li {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
+            color: #888;
+            margin-top: 20px;
         }
     </style>
-    <script src="audioAnalysis.js" defer></script>
-    <script src="noteGenerator.js" defer></script>
-    <script src="playerInput.js" defer></script>
-    <script src="ui.js" defer></script>
-    <script src="main.js" defer></script>
 </head>
 <body>
-    <div id="game-container"></div>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="scoreLabel">Score: 0</div>
+        <div id="comboLabel">Combo: 0</div>
+        <div id="debugLabel"></div>
+    </div>
+
+    <script src="audioAnalyzer.js"></script>
+    <script src="noteGenerator.js"></script>
+    <script src="playerControls.js"></script>
+    <script src="main.js"></script>
+    <script>
+        window.onload = function() {
+            const game = new RhythmGame('path_to_your_audio_file.mp3');
+            game.setup();
+        }
+    </script>
 </body>
 </html>
