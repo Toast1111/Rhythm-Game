@@ -16,48 +16,59 @@ class NoteGenerator {
     }
 
     generateNotes(rhythmData) {
-        console.log('Generating notes based on rhythm data');
+        console.log('Generating notes based on rhythm data:', rhythmData);
         this.notes = [];
-        const beats = rhythmData.beats;
-        const onsets = rhythmData.onsets;
+        const { beats, onsets, frequencies } = rhythmData;
 
         // Combine beats and onsets, sort, and remove duplicates
-        const noteTimes = Array.from(new Set([...beats, ...onsets])).sort((a, b) => a - b);
+        const events = Array.from(new Set([...beats, ...onsets])).sort((a, b) => a - b);
 
-        noteTimes.forEach(time => {
+        console.log(`Combined ${events.length} potential note times`);
+
+        events.forEach((time, index) => {
+            // Use frequency data to determine lane
+            const nearestFreq = this.findNearestFrequency(time, frequencies);
+            const lane = this.frequencyToLane(nearestFreq);
+
+            // Add some variation to prevent too many notes
             if (Math.random() < 0.8) {  // 80% chance to generate a note
-                const lane = Math.floor(Math.random() * this.numLanes);
                 const note = new Note(time, lane);
                 this.notes.push(note);
             }
         });
 
-        // Add some random notes to make the game more interesting
-        const totalDuration = Math.max(...noteTimes);
-        const numExtraNotes = Math.floor(totalDuration / 2); // Add an extra note every 2 seconds on average
-        for (let i = 0; i < numExtraNotes; i++) {
-            const time = Math.random() * totalDuration;
-            const lane = Math.floor(Math.random() * this.numLanes);
-            const note = new Note(time, lane);
-            this.notes.push(note);
-        }
+        console.log(`Generated ${this.notes.length} notes`);
 
         // Sort notes by time
         this.notes.sort((a, b) => a.time - b.time);
-        
-        console.log(`Generated ${this.notes.length} notes`);
 
         // Remove notes that are too close to each other
         this.removeCloseNotes();
+
+        console.log(`Final note count after removing close notes: ${this.notes.length}`);
+    }
+
+    findNearestFrequency(time, frequencies) {
+        return frequencies.reduce((nearest, current) => {
+            return (Math.abs(current[0] - time) < Math.abs(nearest[0] - time)) ? current : nearest;
+        })[1];
+    }
+
+    frequencyToLane(frequency) {
+        // Map frequency ranges to lanes
+        // This is a simple example and can be adjusted based on your game's needs
+        if (frequency < 200) return 0;
+        if (frequency < 400) return 1;
+        if (frequency < 800) return 2;
+        return 3;
     }
 
     removeCloseNotes() {
-        const minTimeBetweenNotes = 0.3; // Minimum time between notes in seconds
+        const minTimeBetweenNotes = 0.2; // Minimum time between notes in seconds
         this.notes = this.notes.filter((note, index, array) => {
             if (index === 0) return true;
             return note.time - array[index - 1].time >= minTimeBetweenNotes;
         });
-        console.log(`After removing close notes: ${this.notes.length} notes`);
     }
 
     getNotes() {
