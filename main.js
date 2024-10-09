@@ -270,7 +270,12 @@ console.log('RhythmGame class defined');
 // Initialize the game when the window loads
 window.onload = function() {
     console.log('Window loaded, about to initialize game...');
-    const game = new RhythmGame("Giorno's theme.mp3");
+    if (typeof songFileName === 'undefined') {
+        console.error('Song filename not defined. Check your index.html file.');
+        return;
+    }
+    console.log('Using song:', songFileName);
+    const game = new RhythmGame(songFileName);
     console.log('RhythmGame instance created');
     game.setup();
     console.log('game.setup() called');
