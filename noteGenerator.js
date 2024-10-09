@@ -1,4 +1,5 @@
 // noteGenerator.js
+console.log('noteGenerator.js loaded');
 
 class Note {
     constructor(time, lane) {
@@ -9,11 +10,13 @@ class Note {
 
 class NoteGenerator {
     constructor(numLanes = 4) {
+        console.log('NoteGenerator constructor called');
         this.numLanes = numLanes;
         this.notes = [];
     }
 
     generateNotes(rhythmData) {
+        console.log('Generating notes based on rhythm data');
         this.notes = [];
         const beats = rhythmData.beats;
         const onsets = rhythmData.onsets;
@@ -29,9 +32,32 @@ class NoteGenerator {
             }
         });
 
+        // Add some random notes to make the game more interesting
+        const totalDuration = Math.max(...noteTimes);
+        const numExtraNotes = Math.floor(totalDuration / 2); // Add an extra note every 2 seconds on average
+        for (let i = 0; i < numExtraNotes; i++) {
+            const time = Math.random() * totalDuration;
+            const lane = Math.floor(Math.random() * this.numLanes);
+            const note = new Note(time, lane);
+            this.notes.push(note);
+        }
+
+        // Sort notes by time
         this.notes.sort((a, b) => a.time - b.time);
         
         console.log(`Generated ${this.notes.length} notes`);
+
+        // Remove notes that are too close to each other
+        this.removeCloseNotes();
+    }
+
+    removeCloseNotes() {
+        const minTimeBetweenNotes = 0.3; // Minimum time between notes in seconds
+        this.notes = this.notes.filter((note, index, array) => {
+            if (index === 0) return true;
+            return note.time - array[index - 1].time >= minTimeBetweenNotes;
+        });
+        console.log(`After removing close notes: ${this.notes.length} notes`);
     }
 
     getNotes() {
@@ -39,18 +65,4 @@ class NoteGenerator {
     }
 }
 
-// Example usage
-// const rhythmData = {
-//     beats: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
-//     onsets: [0.2, 0.7, 1.2, 1.7, 2.2, 2.7],
-//     frequencies: [[0.1, 440], [0.6, 880], [1.1, 660], [1.6, 440], [2.1, 550], [2.6, 440]]
-// };
-// 
-// const generator = new NoteGenerator();
-// generator.generateNotes(rhythmData);
-// const notes = generator.getNotes();
-// 
-// console.log(`Generated ${notes.length} notes:`);
-// notes.forEach(note => {
-//     console.log(`Time: ${note.time.toFixed(2)}, Lane: ${note.lane}`);
-// });
+console.log('NoteGenerator class defined');
