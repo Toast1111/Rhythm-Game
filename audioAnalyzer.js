@@ -13,25 +13,31 @@ class AudioAnalyzer {
     }
 
     async loadAudio(url) {
-        console.log('loadAudio method started with URL:', url);
-        try {
-            console.log('Fetching audio file');
-            const response = await fetch(url);
-            console.log('Audio file fetched, getting array buffer');
-            const arrayBuffer = await response.arrayBuffer();
-            console.log('Array buffer obtained, decoding audio data');
-            this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-            console.log('Audio data decoded successfully');
-            this.duration = this.audioBuffer.duration;
-            console.log('Audio duration:', this.duration);
-            this._precomputeRhythmData();
-            console.log('Rhythm data precomputed');
-            return true;
-        } catch (error) {
-            console.error("Error in loadAudio:", error);
-            return false;
+    console.log('loadAudio method started with URL:', url);
+    try {
+        console.log('Fetching audio file');
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        console.log('Audio file fetched, getting array buffer');
+        const arrayBuffer = await response.arrayBuffer();
+        console.log('Array buffer obtained, decoding audio data');
+        this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+        console.log('Audio data decoded successfully');
+        this.duration = this.audioBuffer.duration;
+        console.log('Audio duration:', this.duration);
+        this._precomputeRhythmData();
+        console.log('Rhythm data precomputed');
+        return true;
+    } catch (error) {
+        console.error("Error in loadAudio:", error.message);
+        if (error.name === 'EncodingError') {
+            console.error("This might be due to an unsupported audio format or a corrupted file.");
+        }
+        return false;
     }
+}
 
     _precomputeRhythmData() {
         console.log('_precomputeRhythmData method started');
