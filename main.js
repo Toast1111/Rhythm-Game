@@ -1,4 +1,5 @@
 // main.js
+console.log('main.js loaded');
 
 class RhythmGame {
     constructor(songPath) {
@@ -66,7 +67,7 @@ class RhythmGame {
     }
 
     gameLoop(timestamp) {
-        const dt = (timestamp - this.lastTimestamp) / 1000;
+        const dt = (timestamp - (this.lastTimestamp || timestamp)) / 1000;
         this.lastTimestamp = timestamp;
 
         this.update(dt);
@@ -206,3 +207,5 @@ class RhythmGame {
         }
     }
 }
+
+console.log('RhythmGame class defined');
