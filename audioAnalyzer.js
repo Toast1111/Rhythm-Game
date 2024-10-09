@@ -1,33 +1,40 @@
 // audioAnalyzer.js
-console.log('audioAnalyzer.js loaded');
+console.log('audioAnalyzer.js file started loading');
 
 class AudioAnalyzer {
     constructor() {
+        console.log('AudioAnalyzer constructor started');
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.source = null;
         this.audioBuffer = null;
         this.duration = 0;
         this.rhythmData = null;
+        console.log('AudioAnalyzer constructor completed');
     }
 
     async loadAudio(url) {
-        console.log('Loading audio from URL:', url);
+        console.log('loadAudio method started with URL:', url);
         try {
+            console.log('Fetching audio file');
             const response = await fetch(url);
+            console.log('Audio file fetched, getting array buffer');
             const arrayBuffer = await response.arrayBuffer();
+            console.log('Array buffer obtained, decoding audio data');
             this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+            console.log('Audio data decoded successfully');
             this.duration = this.audioBuffer.duration;
+            console.log('Audio duration:', this.duration);
             this._precomputeRhythmData();
-            console.log('Audio loaded successfully');
+            console.log('Rhythm data precomputed');
             return true;
         } catch (error) {
-            console.error("Error loading audio file:", error);
+            console.error("Error in loadAudio:", error);
             return false;
         }
     }
 
     _precomputeRhythmData() {
-        console.log('Precomputing rhythm data');
+        console.log('_precomputeRhythmData method started');
         if (!this.audioBuffer) {
             console.error('No audio buffer available for rhythm data computation');
             return;
@@ -50,7 +57,7 @@ class AudioAnalyzer {
     }
 
     _detectBeats() {
-        console.log('Detecting beats');
+        console.log('_detectBeats method started');
         const bufferData = this.audioBuffer.getChannelData(0);
         const sampleRate = this.audioBuffer.sampleRate;
         const chunkSize = Math.floor(sampleRate * 0.05); // 50ms chunks
@@ -81,11 +88,12 @@ class AudioAnalyzer {
             beats = Array.from({length: 20}, (_, i) => i * beatInterval);
         }
 
+        console.log(`Detected ${beats.length} beats`);
         return beats;
     }
 
     _detectOnsets() {
-        console.log('Detecting onsets');
+        console.log('_detectOnsets method started');
         const bufferData = this.audioBuffer.getChannelData(0);
         const sampleRate = this.audioBuffer.sampleRate;
         const chunkSize = Math.floor(sampleRate * 0.05); // 50ms chunks
@@ -117,11 +125,12 @@ class AudioAnalyzer {
             onsets = Array.from({length: 40}, (_, i) => i * onsetInterval);
         }
 
+        console.log(`Detected ${onsets.length} onsets`);
         return onsets;
     }
 
     _extractFrequencies() {
-        console.log('Extracting frequencies');
+        console.log('_extractFrequencies method started');
         const bufferData = this.audioBuffer.getChannelData(0);
         const sampleRate = this.audioBuffer.sampleRate;
         const chunkSize = Math.floor(sampleRate * 0.05); // 50ms chunks
@@ -136,6 +145,7 @@ class AudioAnalyzer {
             }
         }
 
+        console.log(`Extracted ${frequencies.length} frequency data points`);
         return frequencies;
     }
 
@@ -148,12 +158,15 @@ class AudioAnalyzer {
     }
 
     getRhythmData() {
+        console.log('getRhythmData method called');
         return this.rhythmData;
     }
 
     getPlayer() {
+        console.log('getPlayer method called');
         return {
             play: () => {
+                console.log('Player play method called');
                 if (this.source) {
                     this.source.stop();
                 }
@@ -164,6 +177,7 @@ class AudioAnalyzer {
                 console.log('Audio playback started');
             },
             pause: () => {
+                console.log('Player pause method called');
                 if (this.source) {
                     this.source.stop();
                     console.log('Audio playback paused');
@@ -232,4 +246,4 @@ class FFT {
     }
 }
 
-console.log('AudioAnalyzer class defined');
+console.log('audioAnalyzer.js file finished loading');
