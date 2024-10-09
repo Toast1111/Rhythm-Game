@@ -9,6 +9,7 @@
             margin: 0;
             padding: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -32,6 +33,19 @@
             color: #888;
             margin-top: 20px;
         }
+        #consoleOutput {
+            width: 100%;
+            max-width: 800px;
+            height: 200px;
+            overflow-y: auto;
+            background-color: #333;
+            color: #fff;
+            font-family: monospace;
+            padding: 10px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
     </style>
 </head>
 <body>
@@ -41,14 +55,39 @@
         <div id="comboLabel">Combo: 0</div>
         <div id="debugLabel"></div>
     </div>
+    <div id="consoleOutput"></div>
 
     <script src="audioAnalyzer.js"></script>
     <script src="noteGenerator.js"></script>
     <script src="playerControls.js"></script>
     <script src="main.js"></script>
     <script>
+        // Override console.log and console.error to output to the page
+        (function() {
+            var oldLog = console.log;
+            var oldError = console.error;
+            console.log = function(...args) {
+                oldLog.apply(console, args);
+                document.getElementById('consoleOutput').innerHTML += args.map(arg => 
+                    typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+                ).join(' ') + '\n';
+            };
+            console.error = function(...args) {
+                oldError.apply(console, args);
+                document.getElementById('consoleOutput').innerHTML += '<span style="color: red;">' + 
+                    args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg).join(' ') + 
+                    '</span>\n';
+            };
+        })();
+
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('Global error:', message, 'at', source, 'line', lineno, 'column', colno);
+            return false;
+        };
+
         window.onload = function() {
-            const game = new RhythmGame('test.mp3');
+            console.log('Window loaded, initializing game...');
+            const game = new RhythmGame('song.mp3');
             game.setup();
         }
     </script>
