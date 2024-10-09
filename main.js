@@ -2,6 +2,7 @@
 
 class RhythmGame {
     constructor(songPath) {
+        console.log('RhythmGame constructor called with songPath:', songPath);
         this.songPath = songPath;
         this.player = null;
         this.paused = false;
@@ -12,6 +13,7 @@ class RhythmGame {
     }
 
     setup() {
+        console.log('RhythmGame setup method called');
         this.backgroundColor = 'black';
         this.laneWidth = this.width / 4;
         this.notes = [];
@@ -34,19 +36,22 @@ class RhythmGame {
         this.loadSong(this.songPath);
 
         this.playerControls = new PlayerControls(this);
-        this.pauseButton = new PauseButton(this);
 
         this.setupEventListeners();
+        this.gameLoop();
     }
 
     setupEventListeners() {
+        console.log('Setting up event listeners');
         this.canvas.addEventListener('click', this.handleClick.bind(this));
         document.addEventListener('keydown', this.handleKeyPress.bind(this));
     }
 
     loadSong(songPath) {
+        console.log('Attempting to load song:', songPath);
         this.audioAnalyzer.loadAudio(songPath)
             .then(() => {
+                console.log('Song loaded successfully');
                 const rhythmData = this.audioAnalyzer.getRhythmData();
                 this.noteGenerator.generateNotes(rhythmData);
                 this.generatedNotes = this.noteGenerator.getNotes();
@@ -55,9 +60,19 @@ class RhythmGame {
                 this.debugLabel.textContent = `Loaded ${this.generatedNotes.length} notes. Tap to start.`;
             })
             .catch(error => {
-                console.error("Failed to load audio file.", error);
-                this.debugLabel.textContent = "Failed to load audio file.";
+                console.error('Failed to load audio file:', error);
+                this.debugLabel.textContent = 'Failed to load audio file.';
             });
+    }
+
+    gameLoop(timestamp) {
+        const dt = (timestamp - this.lastTimestamp) / 1000;
+        this.lastTimestamp = timestamp;
+
+        this.update(dt);
+        this.draw();
+
+        requestAnimationFrame(this.gameLoop.bind(this));
     }
 
     update(dt) {
@@ -68,7 +83,7 @@ class RhythmGame {
         }
 
         if (!this.audioStarted) {
-            this.debugLabel.textContent = "Tap to start audio";
+            this.debugLabel.textContent = 'Tap to start audio';
             return;
         }
 
@@ -82,9 +97,12 @@ class RhythmGame {
         // Spawn notes
         while (this.generatedNotes.length && this.generatedNotes[0].time <= currentTime + this.noteFallTime) {
             const genNote = this.generatedNotes.shift();
-            const note = new Note(genNote.lane, genNote.time, 
-                                  this.laneWidth * (genNote.lane + 0.5), 
-                                  this.height + 25);
+            const note = {
+                lane: genNote.lane,
+                time: genNote.time,
+                x: this.laneWidth * (genNote.lane + 0.5),
+                y: this.height + 25
+            };
             this.notes.push(note);
         }
 
@@ -119,15 +137,12 @@ class RhythmGame {
         this.ctx.fillRect(0, this.hitLine.y, this.width, this.hitLine.height);
 
         // Draw notes
-        this.notes.forEach(note => {
-            this.ctx.fillStyle = 'white';
+        this.ctx.fillStyle = 'white';
+        for (const note of this.notes) {
             this.ctx.beginPath();
             this.ctx.arc(note.x, note.y, 20, 0, 2 * Math.PI);
             this.ctx.fill();
-        });
-
-        // Draw pause button
-        this.pauseButton.draw(this.ctx);
+        }
     }
 
     removeNote(note, hit = false) {
@@ -147,6 +162,7 @@ class RhythmGame {
     }
 
     handleClick(event) {
+        console.log('Canvas clicked');
         if (this.paused) return;
 
         if (!this.audioStarted) {
@@ -161,11 +177,15 @@ class RhythmGame {
     }
 
     startAudio() {
+        console.log('Starting audio');
         this.audioStarted = true;
-        this.debugLabel.textContent = "Starting in 3...";
-        setTimeout(() => this.debugLabel.textContent = "Starting in 2...", 1000);
-        setTimeout(() => this.debugLabel.textContent = "Starting in 1...", 2000);
-        setTimeout(() => this.player.play(), 3000);
+        this.debugLabel.textContent = 'Starting in 3...';
+        setTimeout(() => this.debugLabel.textContent = 'Starting in 2...', 1000);
+        setTimeout(() => this.debugLabel.textContent = 'Starting in 1...', 2000);
+        setTimeout(() => {
+            this.player.play();
+            console.log('Audio playback started');
+        }, 3000);
     }
 
     togglePause() {
@@ -178,6 +198,7 @@ class RhythmGame {
     }
 
     handleKeyPress(event) {
+        console.log('Key pressed:', event.key);
         if (event.key === 'p') {
             this.togglePause();
         } else {
@@ -185,33 +206,3 @@ class RhythmGame {
         }
     }
 }
-
-class Note {
-    constructor(lane, time, x, y) {
-        this.lane = lane;
-        this.time = time;
-        this.x = x;
-        this.y = y;
-    }
-}
-
-// This function would be called when the page loads
-function main() {
-    const game = new RhythmGame('path_to_your_audio_file.mp3');
-    game.setup();
-
-    let lastTime = 0;
-    function gameLoop(timestamp) {
-        const dt = (timestamp - lastTime) / 1000; // convert to seconds
-        lastTime = timestamp;
-
-        game.update(dt);
-        game.draw();
-        requestAnimationFrame(gameLoop);
-    }
-
-    requestAnimationFrame(gameLoop);
-}
-
-// Call main when the window loads
-window.onload = main;
