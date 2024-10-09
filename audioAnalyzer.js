@@ -17,9 +17,6 @@ class AudioAnalyzer {
         try {
             console.log('Fetching audio file');
             const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
             console.log('Audio file fetched, getting array buffer');
             const arrayBuffer = await response.arrayBuffer();
             console.log('Array buffer obtained, decoding audio data');
@@ -27,132 +24,69 @@ class AudioAnalyzer {
             console.log('Audio data decoded successfully');
             this.duration = this.audioBuffer.duration;
             console.log('Audio duration:', this.duration);
-            this._precomputeRhythmData();
-            console.log('Rhythm data precomputed');
+            this._analyzeAudio();
+            console.log('Audio analyzed');
             return true;
         } catch (error) {
             console.error("Error in loadAudio:", error.message);
-            if (error.name === 'EncodingError') {
-                console.error("This might be due to an unsupported audio format or a corrupted file.");
-            }
             return false;
         }
     }
 
-    _precomputeRhythmData() {
-        console.log('_precomputeRhythmData method started');
-        if (!this.audioBuffer) {
-            console.error('No audio buffer available for rhythm data computation');
-            return;
+    _analyzeAudio() {
+        console.log('_analyzeAudio method started');
+        const bufferData = this.audioBuffer.getChannelData(0); // Analyze first channel
+        const sampleRate = this.audioBuffer.sampleRate;
+        
+        const chunkSize = Math.floor(sampleRate * 0.05); // 50ms chunks
+        const chunks = [];
+
+        for (let i = 0; i < bufferData.length; i += chunkSize) {
+            const chunk = bufferData.slice(i, i + chunkSize);
+            chunks.push(chunk);
         }
 
-        const beats = this._detectBeats();
-        const onsets = this._detectOnsets();
-        const frequencies = this._extractFrequencies();
+        const energyProfile = this._calculateEnergyProfile(chunks);
 
         this.rhythmData = {
-            beats: beats,
-            onsets: onsets,
-            frequencies: frequencies
+            beats: this._detectBeats(chunks),
+            onsets: this._detectOnsets(chunks),
+            frequencies: this._extractFrequencies(chunks, sampleRate),
+            energyProfile: energyProfile,
+            duration: this.duration
         };
 
-        console.log("Precomputed rhythm data:");
-        console.log(`  Beats: ${beats.length}`);
-        console.log(`  Onsets: ${onsets.length}`);
-        console.log(`  Frequency data points: ${frequencies.length}`);
+        console.log('Audio analysis completed');
     }
 
-    _detectBeats() {
-        console.log('_detectBeats method started');
-        const bufferData = this.audioBuffer.getChannelData(0);
-        const sampleRate = this.audioBuffer.sampleRate;
-        const chunkSize = Math.floor(sampleRate * 0.05); // 50ms chunks
-        const threshold = 1.2;
-
-        let beats = [];
-        let rmsValues = [];
-
-        for (let i = 0; i < bufferData.length; i += chunkSize) {
-            const chunk = bufferData.slice(i, i + chunkSize);
-            const rms = Math.sqrt(chunk.reduce((sum, val) => sum + val * val, 0) / chunk.length);
-            rmsValues.push(rms);
-        }
-
-        const averageRms = rmsValues.reduce((sum, val) => sum + val, 0) / rmsValues.length;
-        const thresholdValue = averageRms * threshold;
-
-        rmsValues.forEach((rms, index) => {
-            if (rms > thresholdValue) {
-                beats.push(index * 0.05); // Convert chunk index to time
-            }
-        });
-
-        // Ensure we have at least some beats
-        if (beats.length < 10) {
-            console.log('Not enough beats detected, adding artificial beats');
-            const beatInterval = this.duration / 20;
-            beats = Array.from({length: 20}, (_, i) => i * beatInterval);
-        }
-
-        console.log(`Detected ${beats.length} beats`);
-        return beats;
+    _calculateEnergyProfile(chunks) {
+        const rmsValues = chunks.map(this._getRMSAmplitude);
+        const maxRMS = Math.max(...rmsValues);
+        return rmsValues.map((rms, index) => [index * 0.05, rms / maxRMS]);
     }
 
-    _detectOnsets() {
-        console.log('_detectOnsets method started');
-        const bufferData = this.audioBuffer.getChannelData(0);
-        const sampleRate = this.audioBuffer.sampleRate;
-        const chunkSize = Math.floor(sampleRate * 0.05); // 50ms chunks
-        const threshold = 1.2;
+    _getRMSAmplitude(chunk) {
+        return Math.sqrt(chunk.reduce((sum, val) => sum + val * val, 0) / chunk.length);
+    }
 
-        let onsets = [];
-        let rmsValues = [];
+    _detectBeats(chunks) {
+        const rmsValues = chunks.map(this._getRMSAmplitude);
+        const threshold = this._calculateThreshold(rmsValues);
+        return rmsValues.map((rms, index) => rms > threshold ? index * 0.05 : null).filter(time => time !== null);
+    }
 
-        for (let i = 0; i < bufferData.length; i += chunkSize) {
-            const chunk = bufferData.slice(i, i + chunkSize);
-            const rms = Math.sqrt(chunk.reduce((sum, val) => sum + val * val, 0) / chunk.length);
-            rmsValues.push(rms);
-        }
-
+    _detectOnsets(chunks) {
+        const rmsValues = chunks.map(this._getRMSAmplitude);
         const rmsDiff = rmsValues.slice(1).map((val, index) => val - rmsValues[index]);
-        const averageDiff = rmsDiff.reduce((sum, val) => sum + val, 0) / rmsDiff.length;
-        const thresholdValue = averageDiff * threshold;
-
-        rmsDiff.forEach((diff, index) => {
-            if (diff > thresholdValue) {
-                onsets.push((index + 1) * 0.05); // Convert chunk index to time
-            }
-        });
-
-        // Ensure we have at least some onsets
-        if (onsets.length < 20) {
-            console.log('Not enough onsets detected, adding artificial onsets');
-            const onsetInterval = this.duration / 40;
-            onsets = Array.from({length: 40}, (_, i) => i * onsetInterval);
-        }
-
-        console.log(`Detected ${onsets.length} onsets`);
-        return onsets;
+        const threshold = this._calculateThreshold(rmsDiff);
+        return rmsDiff.map((diff, index) => diff > threshold ? (index + 1) * 0.05 : null).filter(time => time !== null);
     }
 
-    _extractFrequencies() {
-        console.log('_extractFrequencies method started');
-        const bufferData = this.audioBuffer.getChannelData(0);
-        const sampleRate = this.audioBuffer.sampleRate;
-        const chunkSize = Math.floor(sampleRate * 0.05); // 50ms chunks
-
-        let frequencies = [];
-
-        for (let i = 0; i < bufferData.length; i += chunkSize) {
-            const chunk = bufferData.slice(i, i + chunkSize);
-            if (chunk.length > 0) {
-                const dominantFrequency = this._getDominantFrequency(chunk, sampleRate);
-                frequencies.push([i * 0.05, dominantFrequency]); // [time, frequency]
-            }
-        }
-
-        console.log(`Extracted ${frequencies.length} frequency data points`);
-        return frequencies;
+    _extractFrequencies(chunks, sampleRate) {
+        return chunks.map((chunk, index) => {
+            const dominantFreq = this._getDominantFrequency(chunk, sampleRate);
+            return [index * 0.05, dominantFreq];
+        });
     }
 
     _getDominantFrequency(signal, sampleRate) {
@@ -161,6 +95,12 @@ class AudioAnalyzer {
         const spectrum = fft.spectrum;
         const maxIndex = spectrum.indexOf(Math.max(...spectrum));
         return maxIndex * sampleRate / signal.length;
+    }
+
+    _calculateThreshold(values) {
+        const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+        const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+        return mean + Math.sqrt(variance);
     }
 
     getRhythmData() {
