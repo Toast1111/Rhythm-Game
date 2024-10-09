@@ -1,8 +1,9 @@
 // main.js
-console.log('main.js loaded');
+console.log('main.js file started loading');
 
 class RhythmGame {
     constructor(songPath) {
+        console.log('RhythmGame constructor started');
         console.log('RhythmGame constructor called with songPath:', songPath);
         this.songPath = songPath;
         this.player = null;
@@ -38,10 +39,11 @@ class RhythmGame {
     }
 
     setup() {
-        console.log('RhythmGame setup method called');
+        console.log('RhythmGame setup method started');
         this.loadSong(this.songPath);
         this.setupEventListeners();
         this.gameLoop();
+        console.log('RhythmGame setup method completed');
     }
 
     setupEventListeners() {
@@ -52,9 +54,12 @@ class RhythmGame {
     }
 
     loadSong(songPath) {
+        console.log('loadSong method started');
         console.log('Attempting to load song:', songPath);
+        console.log('About to call audioAnalyzer.loadAudio');
         this.audioAnalyzer.loadAudio(songPath)
             .then(() => {
+                console.log('audioAnalyzer.loadAudio resolved successfully');
                 console.log('Song loaded successfully');
                 const rhythmData = this.audioAnalyzer.getRhythmData();
                 console.log('Rhythm data received:', rhythmData);
@@ -66,6 +71,7 @@ class RhythmGame {
                 this.debugLabel.textContent = `Loaded ${this.generatedNotes.length} notes. Tap to start.`;
             })
             .catch(error => {
+                console.error('audioAnalyzer.loadAudio failed:', error);
                 console.error('Failed to load audio file:', error);
                 this.debugLabel.textContent = 'Failed to load audio file.';
             });
@@ -128,7 +134,29 @@ class RhythmGame {
     }
 
     draw() {
-        // ... (keep the draw method as is) ...
+        this.ctx.fillStyle = this.backgroundColor;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+
+        // Draw lane lines
+        this.ctx.strokeStyle = 'gray';
+        for (let i = 1; i < 4; i++) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(i * this.laneWidth, 0);
+            this.ctx.lineTo(i * this.laneWidth, this.height);
+            this.ctx.stroke();
+        }
+
+        // Draw hit line
+        this.ctx.fillStyle = 'white';
+        this.ctx.fillRect(0, this.hitLine.y, this.width, this.hitLine.height);
+
+        // Draw notes
+        this.ctx.fillStyle = 'white';
+        for (const note of this.notes) {
+            this.ctx.beginPath();
+            this.ctx.arc(note.x, note.y, 20, 0, 2 * Math.PI);
+            this.ctx.fill();
+        }
     }
 
     removeNote(note, hit = false) {
@@ -241,7 +269,11 @@ console.log('RhythmGame class defined');
 
 // Initialize the game when the window loads
 window.onload = function() {
-    console.log('Window loaded, initializing game...');
+    console.log('Window loaded, about to initialize game...');
     const game = new RhythmGame('song.mp3');
+    console.log('RhythmGame instance created');
     game.setup();
+    console.log('game.setup() called');
 };
+
+console.log('main.js file finished loading');
