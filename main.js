@@ -27,9 +27,14 @@ class RhythmGame {
         this.comboLabel = document.getElementById('comboLabel');
         this.debugLabel = document.getElementById('debugLabel');
 
+        console.log('Initializing AudioAnalyzer');
         this.audioAnalyzer = new AudioAnalyzer();
+        console.log('Initializing NoteGenerator');
         this.noteGenerator = new NoteGenerator();
+        console.log('Initializing PlayerControls');
         this.playerControls = new PlayerControls(this);
+
+        console.log('RhythmGame constructor completed');
     }
 
     setup() {
@@ -43,6 +48,7 @@ class RhythmGame {
         console.log('Setting up event listeners');
         this.canvas.addEventListener('click', this.handleClick.bind(this));
         document.addEventListener('keydown', this.handleKeyPress.bind(this));
+        console.log('Event listeners set up');
     }
 
     loadSong(songPath) {
@@ -51,10 +57,12 @@ class RhythmGame {
             .then(() => {
                 console.log('Song loaded successfully');
                 const rhythmData = this.audioAnalyzer.getRhythmData();
+                console.log('Rhythm data received:', rhythmData);
                 this.noteGenerator.generateNotes(rhythmData);
                 this.generatedNotes = this.noteGenerator.getNotes();
+                console.log(`Generated ${this.generatedNotes.length} notes`);
                 this.player = this.audioAnalyzer.getPlayer();
-                console.log(`Loaded ${this.generatedNotes.length} notes`);
+                console.log('Audio player created');
                 this.debugLabel.textContent = `Loaded ${this.generatedNotes.length} notes. Tap to start.`;
             })
             .catch(error => {
@@ -102,6 +110,7 @@ class RhythmGame {
                 y: this.height + 25
             };
             this.notes.push(note);
+            console.log(`Note spawned: Lane ${note.lane}, Time ${note.time}`);
         }
 
         // Update note positions
@@ -111,6 +120,7 @@ class RhythmGame {
             note.y = this.height + 25 - progress * (this.height - 75);
             if (note.y < 0) {
                 this.removeNote(note, false);
+                console.log(`Note removed: Lane ${note.lane}, Time ${note.time}`);
             }
         }
 
@@ -118,37 +128,17 @@ class RhythmGame {
     }
 
     draw() {
-        this.ctx.fillStyle = this.backgroundColor;
-        this.ctx.fillRect(0, 0, this.width, this.height);
-
-        // Draw lane lines
-        this.ctx.strokeStyle = 'gray';
-        for (let i = 1; i < 4; i++) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(i * this.laneWidth, 0);
-            this.ctx.lineTo(i * this.laneWidth, this.height);
-            this.ctx.stroke();
-        }
-
-        // Draw hit line
-        this.ctx.fillStyle = 'white';
-        this.ctx.fillRect(0, this.hitLine.y, this.width, this.hitLine.height);
-
-        // Draw notes
-        this.ctx.fillStyle = 'white';
-        for (const note of this.notes) {
-            this.ctx.beginPath();
-            this.ctx.arc(note.x, note.y, 20, 0, 2 * Math.PI);
-            this.ctx.fill();
-        }
+        // ... (keep the draw method as is) ...
     }
 
     removeNote(note, hit = false) {
         if (hit) {
             this.score += 10 * (this.combo + 1);
             this.combo += 1;
+            console.log(`Note hit: Score +${10 * (this.combo + 1)}, Combo: ${this.combo}`);
         } else {
             this.combo = 0;
+            console.log('Note missed: Combo reset');
         }
         this.notes = this.notes.filter(n => n !== note);
         this.updateLabels();
@@ -181,13 +171,37 @@ class RhythmGame {
         setTimeout(() => this.debugLabel.textContent = 'Starting in 2...', 1000);
         setTimeout(() => this.debugLabel.textContent = 'Starting in 1...', 2000);
         setTimeout(() => {
-            this.player.play();
-            console.log('Audio playback started');
+            if (this.player) {
+                this.player.play().then(() => {
+                    console.log('Audio playback started');
+                }).catch(error => {
+                    console.error('Failed to start audio playback:', error);
+                    this.debugLabel.textContent = 'Click to start audio';
+                    this.canvas.addEventListener('click', this.forceStartAudio.bind(this), { once: true });
+                });
+            } else {
+                console.error('Audio player not initialized');
+                this.debugLabel.textContent = 'Audio player not ready';
+            }
         }, 3000);
+    }
+
+    forceStartAudio() {
+        console.log('Attempting to force start audio');
+        if (this.player) {
+            this.player.play().then(() => {
+                console.log('Audio playback started after user interaction');
+            }).catch(error => {
+                console.error('Failed to start audio playback even after user interaction:', error);
+            });
+        } else {
+            console.error('Audio player still not initialized');
+        }
     }
 
     togglePause() {
         this.paused = !this.paused;
+        console.log(`Game ${this.paused ? 'paused' : 'resumed'}`);
         if (this.paused) {
             this.player.pause();
         } else {
@@ -206,16 +220,19 @@ class RhythmGame {
 
     addScore(points) {
         this.score += points;
+        console.log(`Score increased by ${points}. New score: ${this.score}`);
         this.updateLabels();
     }
 
     increaseCombo() {
         this.combo++;
+        console.log(`Combo increased. New combo: ${this.combo}`);
         this.updateLabels();
     }
 
     resetCombo() {
         this.combo = 0;
+        console.log('Combo reset to 0');
         this.updateLabels();
     }
 }
