@@ -270,7 +270,7 @@ console.log('RhythmGame class defined');
 // Initialize the game when the window loads
 window.onload = function() {
     console.log('Window loaded, about to initialize game...');
-    const game = new RhythmGame(`Giorno's theme.mp3`);
+    const game = new RhythmGame("Giorno's theme.mp3");
     console.log('RhythmGame instance created');
     game.setup();
     console.log('game.setup() called');
