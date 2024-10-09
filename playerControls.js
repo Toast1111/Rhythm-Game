@@ -1,7 +1,9 @@
 // playerControls.js
+console.log('playerControls.js loaded');
 
 class PlayerControls {
     constructor(game) {
+        console.log('PlayerControls constructor called');
         this.game = game;
         this.keyMap = {
             'a': 0,
@@ -9,33 +11,33 @@ class PlayerControls {
             'd': 2,
             'f': 3
         };
-        this.setupEventListeners();
     }
 
-    setupEventListeners() {
-        document.addEventListener('keydown', this.handleKeyDown.bind(this));
-    }
-
-    handleKeyDown(event) {
-        const key = event.key.toLowerCase();
-        if (key in this.keyMap) {
-            this.hitNote(this.keyMap[key]);
-        } else if (key === 'p') {
-            this.game.togglePause();
+    handleKey(key) {
+        console.log('handleKey called with:', key);
+        const lowerKey = key.toLowerCase();
+        if (lowerKey in this.keyMap) {
+            this.hitNote(this.keyMap[lowerKey]);
         }
     }
 
+    handleTouch(touchPos) {
+        console.log('handleTouch called with:', touchPos);
+        const lane = Math.floor(touchPos.x / (this.game.width / 4));
+        this.hitNote(lane);
+    }
+
     hitNote(lane) {
-        const hitThreshold = 50; // milliseconds
-        const currentTime = this.game.getCurrentTime();
-        
+        console.log('hitNote called for lane:', lane);
+        const currentTime = this.game.gameTime - this.game.startDelay;
+        const hitThreshold = 0.15; // 150 milliseconds
+
         let hitNotes = this.game.notes.filter(note => 
             note.lane === lane && 
-            Math.abs(note.time - currentTime) < hitThreshold / 1000
+            Math.abs(note.time - currentTime) < hitThreshold
         );
 
         if (hitNotes.length > 0) {
-            // Sort by closest to current time if multiple notes are within threshold
             hitNotes.sort((a, b) => Math.abs(a.time - currentTime) - Math.abs(b.time - currentTime));
             const hitNote = hitNotes[0];
             
@@ -43,12 +45,10 @@ class PlayerControls {
             this.game.addScore(this.calculateScore(Math.abs(hitNote.time - currentTime)));
             this.game.increaseCombo();
             
-            // Visual feedback
-            this.game.showHitEffect(lane);
+            console.log('Note hit successfully');
         } else {
             this.game.resetCombo();
-            // Visual feedback for miss
-            this.game.showMissEffect(lane);
+            console.log('Note missed');
         }
     }
 
@@ -56,55 +56,15 @@ class PlayerControls {
         // Convert time difference to milliseconds
         const msDifference = timeDifference * 1000;
         
-        // Perfect: 0-25ms, Great: 26-50ms
-        if (msDifference <= 25) {
+        // Perfect: 0-50ms, Great: 51-100ms, Good: 101-150ms
+        if (msDifference <= 50) {
             return 100; // Perfect hit
-        } else if (msDifference <= 50) {
-            return 50; // Great hit
+        } else if (msDifference <= 100) {
+            return 75; // Great hit
+        } else {
+            return 50; // Good hit
         }
-        return 0; // Should not happen due to hitThreshold, but just in case
     }
 }
 
-// Example usage in main game file:
-// 
-// class RhythmGame {
-//     constructor() {
-//         // ... other initializations ...
-//         this.playerControls = new PlayerControls(this);
-//     }
-//
-//     getCurrentTime() {
-//         return this.gameTime - this.startDelay;
-//     }
-//
-//     removeNote(note, hit) {
-//         // Remove the note from the game
-//         this.notes = this.notes.filter(n => n !== note);
-//     }
-//
-//     addScore(points) {
-//         this.score += points;
-//         this.updateScoreDisplay();
-//     }
-//
-//     increaseCombo() {
-//         this.combo++;
-//         this.updateComboDisplay();
-//     }
-//
-//     resetCombo() {
-//         this.combo = 0;
-//         this.updateComboDisplay();
-//     }
-//
-//     showHitEffect(lane) {
-//         // Implement visual feedback for successful hit
-//     }
-//
-//     showMissEffect(lane) {
-//         // Implement visual feedback for miss
-//     }
-//
-//     // ... other game methods ...
-// }
+console.log('PlayerControls class defined');
