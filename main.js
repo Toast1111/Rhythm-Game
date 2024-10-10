@@ -15,7 +15,7 @@ class RhythmGame {
         this.backgroundColor = 'black';
         this.laneWidth = this.width / 4;
         this.notes = [];
-        this.notesToRemove = []; // New array to store notes that should be removed
+        this.notesToRemove = []; // Array to store notes that should be removed
         this.score = 0;
         this.combo = 0;
         this.gameTime = 0;
@@ -57,8 +57,11 @@ class RhythmGame {
         console.log('loadSong method started');
         console.log('Attempting to load song:', songPath);
         console.log('About to call audioAnalyzer.loadAudio');
-        this.audioAnalyzer.loadAudio(songPath)
-            .then(() => {
+        
+        const loadAudioPromise = this.audioAnalyzer.loadAudio(songPath);
+        
+        if (loadAudioPromise && typeof loadAudioPromise.then === 'function') {
+            loadAudioPromise.then(() => {
                 console.log('audioAnalyzer.loadAudio resolved successfully');
                 console.log('Song loaded successfully');
                 const rhythmData = this.audioAnalyzer.getRhythmData();
@@ -69,12 +72,15 @@ class RhythmGame {
                 this.player = this.audioAnalyzer.getPlayer();
                 console.log('Audio player created');
                 this.debugLabel.textContent = `Loaded ${this.notes.length} notes. Tap to start.`;
-            })
-            .catch(error => {
+            }).catch(error => {
                 console.error('audioAnalyzer.loadAudio failed:', error);
                 console.error('Failed to load audio file:', error);
                 this.debugLabel.textContent = 'Failed to load audio file.';
             });
+        } else {
+            console.error('audioAnalyzer.loadAudio did not return a Promise');
+            this.debugLabel.textContent = 'Error: Could not load audio file.';
+        }
     }
 
     gameLoop(timestamp) {
@@ -106,20 +112,26 @@ class RhythmGame {
 
         const currentTime = this.gameTime - this.startDelay;
 
+        // Debug logging
+        console.log(`Current time: ${currentTime.toFixed(2)}, Active notes: ${this.notes.length}`);
+
         // Update note positions and mark notes for removal
         for (let i = this.notes.length - 1; i >= 0; i--) {
             const note = this.notes[i];
             const progress = (currentTime - (note.time - this.noteFallTime)) / this.noteFallTime;
             note.y = this.height + 25 - progress * (this.height - 75);
-            if (note.y < -50) { // Note is well off the screen
+            // Debug logging for note positions
+            console.log(`Note ${i}: time=${note.time.toFixed(2)}, y=${note.y.toFixed(2)}`);
+            if (note.y < -50) {
                 this.notesToRemove.push(note);
+                console.log(`Marked note ${i} for removal`);
             }
         }
 
         // Remove marked notes
         if (this.notesToRemove.length > 0) {
             this.notes = this.notes.filter(note => !this.notesToRemove.includes(note));
-            console.log(`Removed ${this.notesToRemove.length} unused notes`);
+            console.log(`Removed ${this.notesToRemove.length} notes`);
             this.notesToRemove = []; // Clear the removal array
         }
 
@@ -149,7 +161,15 @@ class RhythmGame {
             this.ctx.beginPath();
             this.ctx.arc(note.x, note.y, 20, 0, 2 * Math.PI);
             this.ctx.fill();
+            // Debug visualization
+            this.ctx.fillStyle = 'red';
+            this.ctx.fillText(`${note.time.toFixed(2)}`, note.x - 15, note.y);
+            this.ctx.fillStyle = 'white';
         }
+
+        // Debug information on screen
+        this.ctx.fillStyle = 'white';
+        this.ctx.fillText(`Notes: ${this.notes.length}, Time: ${this.gameTime.toFixed(2)}`, 10, 30);
     }
 
     removeNote(note, hit = false) {
@@ -161,7 +181,7 @@ class RhythmGame {
             this.combo = 0;
             console.log('Note missed: Combo reset');
         }
-        this.notesToRemove.push(note); // Mark the note for removal instead of immediately removing it
+        this.notesToRemove.push(note); // Mark the note for removal
         this.updateLabels();
     }
 
