@@ -15,7 +15,7 @@ class RhythmGame {
         this.backgroundColor = 'black';
         this.laneWidth = this.width / 4;
         this.notes = [];
-        this.generatedNotes = [];
+        this.notesToRemove = []; // New array to store notes that should be removed
         this.score = 0;
         this.combo = 0;
         this.gameTime = 0;
@@ -64,11 +64,11 @@ class RhythmGame {
                 const rhythmData = this.audioAnalyzer.getRhythmData();
                 console.log('Rhythm data received:', rhythmData);
                 this.noteGenerator.generateNotes(rhythmData);
-                this.generatedNotes = this.noteGenerator.getNotes();
-                console.log(`Generated ${this.generatedNotes.length} notes`);
+                this.notes = this.noteGenerator.getNotes();
+                console.log(`Generated ${this.notes.length} notes`);
                 this.player = this.audioAnalyzer.getPlayer();
                 console.log('Audio player created');
-                this.debugLabel.textContent = `Loaded ${this.generatedNotes.length} notes. Tap to start.`;
+                this.debugLabel.textContent = `Loaded ${this.notes.length} notes. Tap to start.`;
             })
             .catch(error => {
                 console.error('audioAnalyzer.loadAudio failed:', error);
@@ -106,31 +106,24 @@ class RhythmGame {
 
         const currentTime = this.gameTime - this.startDelay;
 
-        // Spawn notes
-        while (this.generatedNotes.length && this.generatedNotes[0].time <= currentTime + this.noteFallTime) {
-            const genNote = this.generatedNotes.shift();
-            const note = {
-                lane: genNote.lane,
-                time: genNote.time,
-                x: this.laneWidth * (genNote.lane + 0.5),
-                y: this.height + 25
-            };
-            this.notes.push(note);
-            console.log(`Note spawned: Lane ${note.lane}, Time ${note.time}`);
-        }
-
-        // Update note positions
+        // Update note positions and mark notes for removal
         for (let i = this.notes.length - 1; i >= 0; i--) {
             const note = this.notes[i];
             const progress = (currentTime - (note.time - this.noteFallTime)) / this.noteFallTime;
             note.y = this.height + 25 - progress * (this.height - 75);
-            if (note.y < 0) {
-                this.removeNote(note, false);
-                console.log(`Note removed: Lane ${note.lane}, Time ${note.time}`);
+            if (note.y < -50) { // Note is well off the screen
+                this.notesToRemove.push(note);
             }
         }
 
-        this.debugLabel.textContent = `Game Time: ${currentTime.toFixed(2)}, Notes: ${this.notes.length}, Generated Notes: ${this.generatedNotes.length}`;
+        // Remove marked notes
+        if (this.notesToRemove.length > 0) {
+            this.notes = this.notes.filter(note => !this.notesToRemove.includes(note));
+            console.log(`Removed ${this.notesToRemove.length} unused notes`);
+            this.notesToRemove = []; // Clear the removal array
+        }
+
+        this.debugLabel.textContent = `Game Time: ${currentTime.toFixed(2)}, Notes: ${this.notes.length}`;
     }
 
     draw() {
@@ -168,7 +161,7 @@ class RhythmGame {
             this.combo = 0;
             console.log('Note missed: Combo reset');
         }
-        this.notes = this.notes.filter(n => n !== note);
+        this.notesToRemove.push(note); // Mark the note for removal instead of immediately removing it
         this.updateLabels();
     }
 
